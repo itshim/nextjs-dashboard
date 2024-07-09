@@ -143,7 +143,7 @@ export async function generateCredentialOptions(userName: string): Promise<Publi
   if(!user) throw new Error("User not found")
   const userPasskey = await getUserPasskey(user);
   const credentialOptions = await generateRegistrationOptions({
-    rpID,
+    rpID: rpID as string,
     rpName,
     userName,
     userID: userName,
@@ -169,7 +169,7 @@ export async function registerPasskeys(userName: string, publicKey: string, tran
   try {
     const credentialOptions = await generateCredentialOptions(userName);
     await sql`
-    INSERT INTO passkeys (id, publicKey, user, transports)
+    INSERT INTO passkeys (id, publicKey, user_id, transports)
     VALUES (${Buffer.from(publicKey).toString('base64')}, ${publicKey}, ${userName}, ${transports})
   `;
     return credentialOptions;

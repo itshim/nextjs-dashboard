@@ -1,3 +1,3 @@
 export const rpName = "Passkeys nextjs";
-export const rpID = "nextjs-dashboard-ten-livid-20.vercel.app";
+export const rpID = process.env.NEXT_DOMAIN;
 export const origin = `https://${rpID}`;

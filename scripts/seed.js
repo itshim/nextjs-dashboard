@@ -30,8 +30,8 @@ async function seedUsers(client) {
     const createPasskeys = await client.sql`
       CREATE TABLE IF NOT EXISTS passkeys (
         id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-        publicKey VARCHAR(255)
-        user TEXT
+        publicKey VARCHAR(255),
+        user_id TEXT,
         transports TEXT
       )
     `

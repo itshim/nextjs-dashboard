@@ -34,7 +34,7 @@ export type Passkey = {
   //      convert to Uint8Array as necessary
   publicKey: Uint8Array;
   // SQL: Foreign Key to an instance of your internal user model
-  user: string;
+  user_id: string;
   // SQL: Store as `TEXT`. Index this column. A UNIQUE constraint on
   //      (webAuthnUserID + user) also achieves maximum user privacy
   // webauthnUserID: Base64URLString;
