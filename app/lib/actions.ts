@@ -5,6 +5,13 @@ import { signIn } from '@/auth';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
+import { BuiltInProviderType } from 'next-auth/providers';
+import { v4 } from "uuid";
+import { getUser, getUserPasskey } from './data';
+import { generateRegistrationOptions } from '@simplewebauthn/server';
+import { rpID, rpName } from './constants';
+import {AuthenticatorTransportFuture, PublicKeyCredentialCreationOptionsJSON} from "@simplewebauthn/types"
+import { cookies } from 'next/headers';
 
 const FormSchema = z.object({
   id: z.string(),
@@ -102,7 +109,9 @@ export async function authenticate(
   formData: FormData,
 ) {
   try {
-    await signIn('credentials', formData);
+    await signIn(formData.get("type") as BuiltInProviderType || "credentials", formData);
+    const email = formData.get("email");
+    email && cookies().set('username', email as string)
   } catch (error) {
     if (error instanceof AuthError) {
       switch (error.type) {
@@ -113,5 +122,57 @@ export async function authenticate(
       }
     }
     throw error;
+  }
+}
+
+export async function createSession(): Promise<BufferSource> {
+  try {
+    const challenge = v4();
+    await sql`
+    INSERT INTO sessions (challenge)
+    VALUES (${challenge})
+  `;
+  return Buffer.from(challenge);
+  } catch(error) {
+    throw error;
+  }
+}
+
+export async function generateCredentialOptions(userName: string): Promise<PublicKeyCredentialCreationOptionsJSON>  {
+  const user = await getUser(userName);
+  if(!user) throw new Error("User not found")
+  const userPasskey = await getUserPasskey(user);
+  const credentialOptions = await generateRegistrationOptions({
+    rpID,
+    rpName,
+    userName,
+    userID: userName,
+    attestationType: "none",
+    excludeCredentials: userPasskey.map(u => ({
+      id: u.publicKey,
+      type: "public-key",
+      transports: (u.transports?.split(",") || []) as AuthenticatorTransportFuture[]
+    })),
+    authenticatorSelection: {
+      // Defaults
+      residentKey: 'preferred',
+      userVerification: 'preferred',
+      // Optional
+      authenticatorAttachment: 'platform',
+    },
+  });
+  return credentialOptions;
+}
+
+export async function registerPasskeys(userName: string, publicKey: string, transports: AuthenticatorTransportFuture): Promise<PublicKeyCredentialCreationOptionsJSON> {
+  try {
+    const credentialOptions = await generateCredentialOptions(userName);
+    await sql`
+    INSERT INTO passkeys (id, publicKey, user, transports)
+    VALUES (${Buffer.from(publicKey).toString('base64')}, ${publicKey}, ${userName}, ${transports})
+  `;
+    return credentialOptions;
+  } catch(err) {
+    throw err;
   }
 }

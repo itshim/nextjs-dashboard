@@ -7,6 +7,7 @@ import {
   InvoicesTable,
   LatestInvoiceRaw,
   User,
+  Passkey,
   Revenue,
 } from './definitions';
 import { formatCurrency } from './utils';
@@ -233,3 +234,15 @@ export async function getUser(email: string) {
     throw new Error('Failed to fetch user.');
   }
 }
+
+export async function getUserPasskey(user: User) {
+  try {
+    const passkey = await sql`SELECT * FROM passkeys WHERE user_id=${user.id}`;
+    return passkey.rows as Passkey[];
+  } catch (error) {
+    console.error('Failed to fetch passkey:', error);
+    throw new Error('Failed to fetch passkey.');
+  }
+}
+
+
