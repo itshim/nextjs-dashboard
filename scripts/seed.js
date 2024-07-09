@@ -52,6 +52,8 @@ async function seedUsers(client) {
 
     return {
       createTable,
+      createPasskeys,
+      createSessions,
       users: insertedUsers,
     };
   } catch (error) {
