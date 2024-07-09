@@ -161,6 +161,7 @@ export async function generateCredentialOptions(userName: string): Promise<Publi
       authenticatorAttachment: 'platform',
     },
   });
+  console.log(credentialOptions, "credentialOption")
   return credentialOptions;
 }
 

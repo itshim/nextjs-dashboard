@@ -14,7 +14,7 @@ import { authenticate, createSession } from '../lib/actions';
 export default function LoginForm() {
   const [errorMessage, dispatch] = useFormState(authenticate, undefined);
   async function onPassKeyClick() {
-    const challenge = await createSession();
+    const challenge = new Int32Array(await createSession() as ArrayBufferLike);
     const options: PublicKeyCredentialRequestOptions  = {
       challenge,
       rpId: "localhost:3000",
