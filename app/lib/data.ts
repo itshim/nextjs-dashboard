@@ -237,7 +237,8 @@ export async function getUser(email: string) {
 
 export async function getUserPasskey(user: User) {
   try {
-    const passkey = await sql`SELECT * FROM passkeys WHERE user_id=${user.id}`;
+    console.log(user, "user");
+    const passkey = await sql`SELECT * FROM passkeys WHERE user_id=${user.email}`;
     return passkey.rows as Passkey[];
   } catch (error) {
     console.error('Failed to fetch passkey:', error);
