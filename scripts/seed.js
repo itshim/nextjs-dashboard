@@ -32,6 +32,7 @@ async function seedUsers(client) {
         id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
         publicKey VARCHAR(255)
         user TEXT
+        transports TEXT
       )
     `
 
