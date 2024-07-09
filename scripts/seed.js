@@ -23,14 +23,14 @@ async function seedUsers(client) {
     const createSessions = await client.sql`
       CREATE TABLE IF NOT EXISTS sessions (
         id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-        challenge string
+        challenge VARCHAR(255)
       )
     `
 
     const createPasskeys = await client.sql`
       CREATE TABLE IF NOT EXISTS passkeys (
         id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-        challenge string
+        challenge VARCHAR(255)
       )
     `
 
