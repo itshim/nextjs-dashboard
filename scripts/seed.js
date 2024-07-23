@@ -23,17 +23,54 @@ async function seedUsers(client) {
     const createSessions = await client.sql`
       CREATE TABLE IF NOT EXISTS sessions (
         id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-        challenge VARCHAR(255)
+        session_token VARCHAR(255),
+        expires DATETIME
+      )
+    `
+
+    const createAccounts = await client.sql`
+      CREATE TABLE IF NOT EXISTS accounts (
+        id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+        user_id VARCHAR(255),
+        provider_id VARCHAR(255),
+        provider_type VARCHAR(255),
+        provider_account_id VARCHAR(255),
+        refresh_token VARCHAR(255),
+        access_token VARCHAR(255),
+        expires_at DATETIME,
+        token_type string,
+        scope string,
+        id_token string
+      )
+    `
+
+    const createVerificationToken = await client.sql`
+      CREATE TABLE IF NOT EXISTS verification_tokens (
+        id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+        token VARCHAR(255),
+        expires DATETIME,
+        identifier string
       )
     `
 
     const createPasskeys = await client.sql`
-      CREATE TABLE IF NOT EXISTS passkeys (
-        id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+      CREATE TABLE IF NOT EXISTS authenticator (
+        credentialID TEXT NOT NULL
+        userId TEXT NOT NULL
+        providerAccountId TEXT NOT NULL
+        credentialPublicKey TEXT NOT NULL
+        counter INTEGER NOT NULL
+        credentialDeviceType TEXT NOT NULL
+        credentialBackedUp BOOLEAN NOT NULL
         publicKey VARCHAR(255),
-        user_id TEXT,
         transports TEXT
+        PRIMARY KEY ("userId", "credentialID"),
+        CONSTRAINT "Authenticator_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
       )
+    `
+
+    const createPasskeyIndex = await client.sql`
+      CREATE UNIQUE INDEX "Authenticator_credentialID_key" ON "Authenticator"("credentialID");
     `
 
     console.log(`Created "users" table`);
@@ -55,7 +92,10 @@ async function seedUsers(client) {
     return {
       createTable,
       createPasskeys,
+      createPasskeyIndex,
       createSessions,
+      createAccounts,
+      createVerificationToken,
       users: insertedUsers,
     };
   } catch (error) {

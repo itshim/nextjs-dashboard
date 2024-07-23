@@ -225,26 +225,3 @@ export async function fetchFilteredCustomers(query: string) {
   }
 }
 
-export async function getUser(email: string) {
-  try {
-    const user = await sql`SELECT * FROM users WHERE email=${email}`;
-
-    return user.rows[0] as User;
-  } catch (error) {
-    console.error('Failed to fetch user:', error);
-    throw new Error('Failed to fetch user.');
-  }
-}
-
-export async function getUserPasskey(user: User) {
-  try {
-    console.log(user, "user");
-    const passkey = await sql`SELECT * FROM passkeys WHERE user_id=${user.email}`;
-    return passkey.rows as Passkey[];
-  } catch (error) {
-    console.error('Failed to fetch passkey:', error);
-    throw new Error('Failed to fetch passkey.');
-  }
-}
-
-

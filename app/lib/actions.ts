@@ -7,11 +7,10 @@ import { redirect } from 'next/navigation';
 import { z } from 'zod';
 import { BuiltInProviderType } from 'next-auth/providers';
 import { v4 } from "uuid";
-import { getUser, getUserPasskey } from './data';
+import { getUser, getUserPasskey } from '../../auth';
 import { generateRegistrationOptions } from '@simplewebauthn/server';
 import { rpID, rpName } from './constants';
 import {AuthenticatorTransportFuture, PublicKeyCredentialCreationOptionsJSON} from "@simplewebauthn/types"
-import { cookies } from 'next/headers';
 
 const FormSchema = z.object({
   id: z.string(),
@@ -109,9 +108,10 @@ export async function authenticate(
   formData: FormData,
 ) {
   try {
+    console.log("signin", formData.get("type"));
     await signIn(formData.get("type") as BuiltInProviderType || "credentials", formData);
-    const email = formData.get("email");
-    email && cookies().set('username', email as string)
+    // const email = formData.get("email");
+    // email && cookies().set('username', email as string)
   } catch (error) {
     if (error instanceof AuthError) {
       switch (error.type) {
@@ -169,8 +169,8 @@ export async function registerPasskeys(userName: string, publicKey: string, tran
   try {
     const credentialOptions = await generateCredentialOptions(userName);
     await sql`
-    INSERT INTO passkeys (id, publicKey, user_id, transports)
-    VALUES (${Buffer.from(publicKey).toString('base64')}, ${publicKey}, ${userName}, ${transports})
+    INSERT INTO passkeys (publicKey, user_id, transports)
+    VALUES (${publicKey}, ${userName}, ${transports})
   `;
     return credentialOptions;
   } catch(err) {

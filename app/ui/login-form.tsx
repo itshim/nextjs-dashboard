@@ -10,23 +10,72 @@ import { ArrowRightIcon } from '@heroicons/react/20/solid';
 import { Button } from './button';
 import { useFormState, useFormStatus } from 'react-dom';
 import { authenticate, createSession } from '../lib/actions';
+import { useEffect, useRef } from 'react';
+
+function _arrayBufferToBase64( buffer: ArrayBuffer ) {
+  var binary = '';
+  var bytes = new Uint8Array( buffer );
+  var len = bytes.byteLength;
+  for (var i = 0; i < len; i++) {
+      binary += String.fromCharCode( bytes[ i ] );
+  }
+  return window.btoa( binary );
+}
 
 export default function LoginForm() {
   const [errorMessage, dispatch] = useFormState(authenticate, undefined);
-  async function onPassKeyClick() {
-    const challenge = new Int32Array(await createSession() as ArrayBufferLike);
-    const options: PublicKeyCredentialRequestOptions  = {
-      challenge,
-      rpId: process.env.NEXT_DOMAIN,
-      allowCredentials: [],
-      timeout: 10000,
-      userVerification: "preferred"
+  const isPending = useRef<boolean>(false);
+  useEffect(() => {
+    async function getPasskey() {
+      if(isPending.current) return;
+      isPending.current = true;
+      const challengeBuffer = await createSession();
+      const challenge = new Int32Array(challengeBuffer as ArrayBufferLike);
+      const options: PublicKeyCredentialRequestOptions  = {
+        challenge,
+        rpId: process.env.NEXT_DOMAIN,
+        allowCredentials: [],
+        timeout: 1000,
+        userVerification: "preferred"
+      }
+     const credentials = await navigator.credentials.get({
+      publicKey: options, 
+      mediation: "conditional", 
+      password: true
+    }) as PublicKeyCredential; 
+     const userHandleBuffer = (credentials.response as AuthenticatorAssertionResponse).userHandle;
+     console.log(credentials);
+     const clientDataJSON = _arrayBufferToBase64(credentials.response.clientDataJSON);
+     const authenticatorData = _arrayBufferToBase64((credentials.response as AuthenticatorAssertionResponse).authenticatorData);
+     const signature = _arrayBufferToBase64((credentials.response as AuthenticatorAssertionResponse).signature);
+     const rawId = _arrayBufferToBase64(credentials.rawId);
+     const id = credentials.id;
+     const userHandle = userHandleBuffer ? _arrayBufferToBase64(userHandleBuffer) : null;
+     const response = {
+      clientDataJSON,
+      authenticatorData,
+      signature,
+      userHandle,
+      rawId,
+      id
+     };
+     const cred = {
+      ...credentials,
+      response
+     }
+     const data = new FormData();
+     data.append("authType", "passkeys");
+     data.append("credentials", JSON.stringify(cred));
+    //  data.append("challenge", challengeBuffer.toString());
+     isPending.current = false;
+     dispatch(data);
+    //  data.append("email", credentials.response.clientDataJSON);
     }
-   const credentials = await navigator.credentials.get({publicKey: options, mediation: "conditional"}); 
-  }
+    getPasskey();
+  }, []);
+
   return (
     <form className="space-y-3" action={dispatch}>
-    <button type='button' className='text-blue-500' onClick={onPassKeyClick}>Sign in with Passkeys</button>
       <div className="flex-1 rounded-lg bg-gray-50 px-6 pb-4 pt-8">
         <h1 className={`${lusitana.className} mb-3 text-2xl`}>
           Please log in to continue.

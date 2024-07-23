@@ -6,6 +6,7 @@ import base64url from "base64url";
 import { AuthenticatorTransportFuture } from "@simplewebauthn/types";
 
 export default function CreatePasskey() {
+    // const {data: session} = useSession
     async function createPasskey() {
         const email = document.cookie
         .split("; ")

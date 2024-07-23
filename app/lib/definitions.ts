@@ -3,6 +3,7 @@ import type {
   CredentialDeviceType,
   Base64URLString,
 } from '@simplewebauthn/types';
+import { AdapterAccountType } from 'next-auth/adapters';
 
 // This file contains type definitions for your data.
 // It describes the shape of the data, and what data type each property should accept.
@@ -14,6 +15,25 @@ export type User = {
   email: string;
   password: string;
 };
+
+export type Accounts = {
+  user_id: string;
+  provider_id: string;
+  provider_type: AdapterAccountType;
+  provider_account_id: string;
+  refresh_token: string;
+  access_token: string;
+  expires_at: Date;
+  token_type: string;
+  scope: string;
+  id_token: string;
+}
+
+export type VerificationTokens = {
+  identifier: string;
+  token: string;
+  expires: Date;
+}
 
 
 
@@ -28,13 +48,18 @@ export type User = {
  */
 export type Passkey = {
   // SQL: Store as `TEXT`. Index this column
-  id: Base64URLString;
+  credentialID: Base64URLString;
   // SQL: Store raw bytes as `BYTEA`/`BLOB`/etc...
   //      Caution: Node ORM's may map this to a Buffer on retrieval,
   //      convert to Uint8Array as necessary
   publicKey: Uint8Array;
   // SQL: Foreign Key to an instance of your internal user model
-  user_id: string;
+  userId: string;
+  providerAccountId: string;
+  credentialPublicKey: string;
+  counter: number;
+  credentialDeviceType: string;
+  credentialBackedUp: boolean;
   // SQL: Store as `TEXT`. Index this column. A UNIQUE constraint on
   //      (webAuthnUserID + user) also achieves maximum user privacy
   // webauthnUserID: Base64URLString;
@@ -51,7 +76,9 @@ export type Passkey = {
 };
 
 export type Session = {
-  challenge: string;
+  user_id: string;
+  expires: Date,
+  session_token: string;
 }
 
 export type Customer = {
