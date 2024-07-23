@@ -40,8 +40,7 @@ export default function LoginForm() {
       }
      const credentials = await navigator.credentials.get({
       publicKey: options, 
-      mediation: "conditional", 
-      password: true
+      mediation: "conditional"
     }) as PublicKeyCredential; 
      const userHandleBuffer = (credentials.response as AuthenticatorAssertionResponse).userHandle;
      console.log(credentials);
