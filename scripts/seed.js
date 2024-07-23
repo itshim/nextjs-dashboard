@@ -20,13 +20,16 @@ async function seedUsers(client) {
       );
     `;
 
+    console.log("Created users");
+
     const createSessions = await client.sql`
       CREATE TABLE IF NOT EXISTS sessions (
         id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
         session_token VARCHAR(255),
-        expires DATETIME
+        expires TIMESTAMP
       )
     `
+    console.log("Created sessions");
 
     const createAccounts = await client.sql`
       CREATE TABLE IF NOT EXISTS accounts (
@@ -37,40 +40,44 @@ async function seedUsers(client) {
         provider_account_id VARCHAR(255),
         refresh_token VARCHAR(255),
         access_token VARCHAR(255),
-        expires_at DATETIME,
-        token_type string,
-        scope string,
-        id_token string
+        expires_at TIMESTAMP,
+        token_type VARCHAR(255),
+        scope VARCHAR(255),
+        id_token VARCHAR(255)
       )
     `
+    console.log("Created accounts");
 
     const createVerificationToken = await client.sql`
       CREATE TABLE IF NOT EXISTS verification_tokens (
         id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
         token VARCHAR(255),
-        expires DATETIME,
-        identifier string
+        expires TIMESTAMP,
+        identifier VARCHAR(255)
       )
     `
+    console.log("Created verification tokens");
 
     const createPasskeys = await client.sql`
-      CREATE TABLE IF NOT EXISTS authenticator (
-        credentialID TEXT NOT NULL
-        userId TEXT NOT NULL
-        providerAccountId TEXT NOT NULL
-        credentialPublicKey TEXT NOT NULL
-        counter INTEGER NOT NULL
-        credentialDeviceType TEXT NOT NULL
-        credentialBackedUp BOOLEAN NOT NULL
+      CREATE TABLE IF NOT EXISTS authentication (
+        credentialID TEXT NOT NULL,
+        userID TEXT NOT NULL,
+        providerAccountID TEXT NOT NULL,
+        customerID TEXT NOT NULL,
+        credentialPublicKey TEXT NOT NULL,
+        counter INTEGER NOT NULL,
+        credentialKeyType TEXT NOT NULL,
+        credentialBase64 TEXT NOT NULL,
         publicKey VARCHAR(255),
-        transports TEXT
-        PRIMARY KEY ("userId", "credentialID"),
-        CONSTRAINT "Authenticator_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+        transfers TEXT,
+        PRIMARY KEY (userID, credentialID),
+        CONSTRAINT Authentication_userID_fk FOREIGN KEY (userID) REFERENCES users (email) ON DELETE CASCADE ON UPDATE CASCADE
       )
     `
+    console.log("Created authentication");
 
     const createPasskeyIndex = await client.sql`
-      CREATE UNIQUE INDEX "Authenticator_credentialID_key" ON "Authenticator"("credentialID");
+      CREATE UNIQUE INDEX Authenticator_credentialID_key ON authentication (credentialID)
     `
 
     console.log(`Created "users" table`);
